@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>우리집 대시보드</title>
+  <style>
+    /* ── Design tokens (from DESIGN.md) ── */
+    :root {
+      --color-primary:   #111111;
+      --color-secondary: #555555;
+      --color-tertiary:  #2563EB;
+      --color-neutral:   #FAFAF9;
+      --color-surface:   #FFFFFF;
+      --color-border:    #E5E5E5;
+
+      --rounded-sm:   4px;
+      --rounded-md:   8px;
+      --rounded-lg:   12px;
+      --rounded-full: 9999px;
+
+      --space-xs:  4px;
+      --space-sm:  8px;
+      --space-md:  16px;
+      --space-lg:  24px;
+      --space-xl:  48px;
+      --space-2xl: 80px;
+
+      /* Status colors — badges & indicators only */
+      --ok-color:      #166534;
+      --ok-bg:         #F0FDF4;
+      --ok-border:     #BBF7D0;
+      --soon-color:    #92400E;
+      --soon-bg:       #FFFBEB;
+      --soon-border:   #FDE68A;
+      --overdue-color: #991B1B;
+      --overdue-bg:    #FEF2F2;
+      --overdue-border:#FECACA;
+      --unset-color:   #555555;
+      --unset-bg:      #F3F4F6;
+      --unset-border:  #E5E7EB;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      font-size: 1rem;
+      line-height: 1.75;
+      background: var(--color-neutral);
+      color: var(--color-primary);
+      min-height: 100vh;
+      padding: var(--space-xl) var(--space-md) var(--space-2xl);
+    }
+
+    /* ── Header ── */
+    header {
+      max-width: 760px;
+      margin: 0 auto var(--space-xl);
+    }
+
+    .header-top {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-sm);
+    }
+
+    h1 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+
+    .today-label {
+      font-family: ui-monospace, 'Fira Code', monospace;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      color: var(--color-secondary);
+      text-transform: uppercase;
+    }
+
+    .summary-bar {
+      display: flex;
+      gap: var(--space-sm);
+      flex-wrap: wrap;
+      margin-top: var(--space-sm);
+    }
+
+    .summary-chip {
+      font-family: ui-monospace, monospace;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      padding: 2px var(--space-sm);
+      border-radius: var(--rounded-full);
+      border: 1px solid;
+    }
+    .summary-chip.ok      { color: var(--ok-color);      background: var(--ok-bg);      border-color: var(--ok-border); }
+    .summary-chip.soon    { color: var(--soon-color);    background: var(--soon-bg);    border-color: var(--soon-border); }
+    .summary-chip.overdue { color: var(--overdue-color); background: var(--overdue-bg); border-color: var(--overdue-border); }
+
+    /* ── Grid ── */
+    .grid {
+      max-width: 760px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: var(--space-md);
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--rounded-md);
+      padding: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-md);
+    }
+
+    .card-icon {
+      font-size: 1.375rem;
+      line-height: 1;
+      padding-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .card-title-group { flex: 1; min-width: 0; }
+
+    .card-title {
+      font-family: Georgia, serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      line-height: 1.25;
+    }
+
+    .card-meta {
+      font-family: ui-monospace, monospace;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      color: var(--color-secondary);
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .status-badge {
+      flex-shrink: 0;
+      font-family: ui-monospace, monospace;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      padding: 2px var(--space-sm);
+      border-radius: var(--rounded-full);
+      border: 1px solid;
+      white-space: nowrap;
+    }
+    .status-badge.ok      { color: var(--ok-color);      background: var(--ok-bg);      border-color: var(--ok-border); }
+    .status-badge.soon    { color: var(--soon-color);    background: var(--soon-bg);    border-color: var(--soon-border); }
+    .status-badge.overdue { color: var(--overdue-color); background: var(--overdue-bg); border-color: var(--overdue-border); }
+    .status-badge.unset   { color: var(--unset-color);   background: var(--unset-bg);   border-color: var(--unset-border); }
+
+    /* Progress bar */
+    .progress-wrap { display: flex; flex-direction: column; gap: var(--space-xs); }
+
+    .progress-bar-bg {
+      height: 3px;
+      background: var(--color-border);
+      border-radius: var(--rounded-full);
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: var(--rounded-full);
+      transition: width 0.4s ease;
+    }
+    .progress-bar-fill.ok      { background: #16A34A; }
+    .progress-bar-fill.soon    { background: #D97706; }
+    .progress-bar-fill.overdue { background: #DC2626; }
+
+    /* Meta row */
+    .meta-row {
+      display: flex;
+      gap: var(--space-xl);
+    }
+    .meta-item { display: flex; flex-direction: column; gap: 2px; }
+    .meta-label {
+      font-family: ui-monospace, monospace;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--color-secondary);
+    }
+    .meta-value {
+      font-size: 0.875rem;
+      font-weight: 400;
+      line-height: 1.4;
+      color: var(--color-primary);
+    }
+
+    /* Card footer buttons */
+    .card-footer { display: flex; gap: var(--space-sm); justify-content: flex-end; }
+
+    .btn-primary {
+      padding: 6px var(--space-md);
+      border: 1px solid var(--color-tertiary);
+      border-radius: var(--rounded-md);
+      background: var(--color-tertiary);
+      color: #fff;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .btn-primary:hover { background: #1D4ED8; border-color: #1D4ED8; }
+    .btn-primary:focus-visible { outline: 2px solid var(--color-tertiary); outline-offset: 2px; }
+
+    .btn-ghost {
+      padding: 6px var(--space-md);
+      border: 1px solid var(--color-border);
+      border-radius: var(--rounded-md);
+      background: transparent;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.8rem;
+      color: var(--color-secondary);
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .btn-ghost:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .btn-ghost:focus-visible { outline: 2px solid var(--color-tertiary); outline-offset: 2px; }
+
+    /* ── Sort bar ── */
+    .sort-bar {
+      max-width: 760px;
+      margin: 0 auto var(--space-md);
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+    .sort-label {
+      font-family: ui-monospace, monospace;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--color-secondary);
+      white-space: nowrap;
+    }
+    .sort-btn {
+      padding: 4px var(--space-sm);
+      border: 1px solid var(--color-border);
+      border-radius: var(--rounded-full);
+      background: transparent;
+      font-family: ui-monospace, monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.03em;
+      color: var(--color-secondary);
+      cursor: pointer;
+      transition: border-color 0.12s, color 0.12s, background 0.12s;
+    }
+    .sort-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .sort-btn.active {
+      border-color: var(--color-primary);
+      background: var(--color-primary);
+      color: var(--color-surface);
+    }
+
+    /* ── 창틀 청소 room rows ── */
+    .room-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      border: 1px solid var(--color-border);
+      border-radius: var(--rounded-md);
+      overflow: hidden;
+    }
+    .room-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+      border-bottom: 1px solid var(--color-border);
+      font-size: 0.875rem;
+    }
+    .room-row:last-child { border-bottom: none; }
+    .room-name { flex: 1; font-weight: 400; }
+    .room-date {
+      font-family: ui-monospace, monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.03em;
+      color: var(--color-secondary);
+    }
+
+    /* ── Add card ── */
+    .add-card {
+      background: transparent;
+      border: 1px dashed var(--color-border);
+      border-radius: var(--rounded-md);
+      padding: var(--space-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      cursor: pointer;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.875rem;
+      color: var(--color-secondary);
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .add-card:hover {
+      border-color: var(--color-tertiary);
+      color: var(--color-tertiary);
+      background: #EFF6FF;
+    }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-md);
+    }
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-lg) var(--space-lg);
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .modal h2 {
+      font-family: Georgia, serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin-bottom: var(--space-lg);
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      margin-bottom: var(--space-md);
+    }
+    .form-label {
+      font-family: ui-monospace, monospace;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--color-secondary);
+    }
+    .form-input, .form-select {
+      padding: var(--space-sm) var(--space-md);
+      border: 1px solid var(--color-border);
+      border-radius: var(--rounded-md);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.875rem;
+      color: var(--color-primary);
+      background: var(--color-surface);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-input:focus, .form-select:focus { border-color: var(--color-tertiary); }
+
+    .icon-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-xs);
+    }
+    .icon-opt {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--rounded-sm);
+      cursor: pointer;
+      font-size: 1.2rem;
+      border: 1px solid var(--color-border);
+      background: var(--color-neutral);
+      transition: border-color 0.1s, background 0.1s;
+    }
+    .icon-opt:hover  { border-color: var(--color-tertiary); }
+    .icon-opt.active { border-color: var(--color-tertiary); background: #EFF6FF; }
+
+    .modal-footer {
+      display: flex;
+      gap: var(--space-sm);
+      margin-top: var(--space-lg);
+      align-items: center;
+    }
+    .btn-delete {
+      padding: 8px var(--space-md);
+      border: none;
+      border-radius: var(--rounded-md);
+      background: var(--overdue-bg);
+      color: var(--overdue-color);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--overdue-border);
+      margin-right: auto;
+    }
+    .btn-delete:hover { background: #FEE2E2; }
+
+    .btn-cancel {
+      padding: 8px var(--space-md);
+      border: 1px solid var(--color-border);
+      border-radius: var(--rounded-md);
+      background: transparent;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.875rem;
+      color: var(--color-secondary);
+      cursor: pointer;
+    }
+    .btn-cancel:hover { background: var(--color-neutral); }
+
+    .btn-save {
+      padding: 8px var(--space-md);
+      border: none;
+      border-radius: var(--rounded-md);
+      background: var(--color-tertiary);
+      color: #fff;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-save:hover { background: #1D4ED8; }
+
+    /* Room select modal */
+    .room-check-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-lg);
+    }
+    .room-check-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+      border: 1px solid var(--color-border);
+      border-radius: var(--rounded-md);
+      cursor: pointer;
+      user-select: none;
+      transition: border-color 0.1s, background 0.1s;
+    }
+    .room-check-item:hover { border-color: var(--color-tertiary); background: #EFF6FF; }
+    .room-check-item input[type=checkbox] { accent-color: var(--color-tertiary); width: 16px; height: 16px; cursor: pointer; }
+    .room-check-label { font-size: 0.875rem; flex: 1; }
+    .room-check-date  {
+      font-family: ui-monospace, monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.03em;
+      color: var(--color-secondary);
+    }
+
+    hr.divider {
+      border: none;
+      border-top: 1px solid var(--color-border);
+      margin: var(--space-sm) 0;
+    }
+
+    @media (max-width: 480px) {
+      h1 { font-size: 1.5rem; }
+      .grid { grid-template-columns: 1fr; }
+      .meta-row { gap: var(--space-lg); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <h1>우리집 대시보드</h1>
+    <span class="today-label" id="todayLabel"></span>
+  </div>
+  <div class="summary-bar" id="summaryBar"></div>
+</header>
+
+<div class="sort-bar">
+  <span class="sort-label">정렬</span>
+  <button class="sort-btn active" data-sort="alpha">가나다순</button>
+  <button class="sort-btn" data-sort="newest">최신순</button>
+  <button class="sort-btn" data-sort="oldest">오래된순</button>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<!-- Edit / Add modal -->
+<div class="modal-backdrop" id="editModal">
+  <div class="modal">
+    <h2 id="editTitle">항목 추가</h2>
+    <div class="form-group">
+      <span class="form-label">아이콘</span>
+      <div class="icon-picker" id="iconPicker"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="inputName">이름</label>
+      <input class="form-input" type="text" id="inputName" maxlength="30" placeholder="예: 이불 빨래" />
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="inputInterval">주기 (일)</label>
+      <input class="form-input" type="number" id="inputInterval" min="1" max="365" placeholder="예: 14" />
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="inputLastDone">마지막 완료일</label>
+      <input class="form-input" type="date" id="inputLastDone" />
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="inputWarnDays">알림 기준 (며칠 전부터 '곧 해야함')</label>
+      <input class="form-input" type="number" id="inputWarnDays" min="1" max="30" placeholder="예: 3" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn-delete" id="btnDelete" style="display:none">삭제</button>
+      <button class="btn-cancel" id="btnEditCancel">취소</button>
+      <button class="btn-save" id="btnEditSave">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- Room select modal (창틀 청소 완료 기록) -->
+<div class="modal-backdrop" id="roomModal">
+  <div class="modal">
+    <h2>창틀 청소 — 완료 기록</h2>
+    <p style="font-size:0.875rem;color:var(--color-secondary);margin-bottom:var(--space-md)">오늘 청소한 방을 선택하세요.</p>
+    <div class="room-check-list" id="roomCheckList"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="btnRoomCancel">취소</button>
+      <button class="btn-save" id="btnRoomSave">저장</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'home-dashboard-v2';
+const ICONS = ['🛏️','🪮','🪟','♻️','📦','🍳','🌀','🚽','🚪','🛋️','🤖','💨','👕','🧹','🌱','💧','🧼','🧽','🏠','🐾'];
+const WINDOW_ROOMS = ['서재','아이방','베란다','주방','거실'];
+
+let tasks = [];
+let editingId = null;
+let selectedIcon = ICONS[0];
+let sortMode = 'alpha';
+
+// ── Storage ──
+function load() {
+  try { tasks = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultTasks(); }
+  catch { tasks = defaultTasks(); }
+}
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); }
+
+function defaultTasks() {
+  return [
+    mk('🛏️', '이불 빨래',       14, 3),
+    mk('🪮', '베개 커버 빨래',   7,  2),
+    mkWindow(),
+    mk('♻️', '분리수거',         7,  1),
+    mk('📦', '전자레인지 청소',  14, 3),
+    mk('🍳', '에어프라이어 청소', 7,  2),
+    mk('🌀', '실링팬 먼지 청소', 30, 5),
+    mk('🚽', '화장실 청소 — 거실', 7, 2),
+    mk('🚽', '화장실 청소 — 안방', 7, 2),
+    mk('🚪', '현관 청소',        14, 3),
+    mk('🛋️', '소파 침구 청소',   14, 3),
+    mk('🤖', '로봇청소기 청소',  14, 3),
+    mk('💨', '주방 후드 청소',   30, 5),
+    mk('👕', '계절별 옷 정리',   90, 7),
+  ];
+}
+
+function mk(icon, name, interval, warnDays) {
+  return { id: uid(), type: 'default', icon, name, interval, lastDone: null, warnDays };
+}
+
+function mkWindow() {
+  const rooms = {};
+  WINDOW_ROOMS.forEach(r => rooms[r] = null);
+  return { id: uid(), type: 'window', icon: '🪟', name: '창틀 청소', interval: 30, warnDays: 5, rooms };
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+// ── Date helpers ──
+function todayStr() { return new Date().toISOString().slice(0,10); }
+
+function parseDate(s) {
+  if (!s) return null;
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+
+function dayDiff(a, b) { return Math.round((b - a) / 86400000); }
+
+function relLabel(s) {
+  if (!s) return '—';
+  const d = parseDate(s);
+  const today = parseDate(todayStr());
+  const diff = dayDiff(today, d);
+  if (diff === 0)  return '오늘';
+  if (diff === -1) return '어제';
+  if (diff < 0)   return `${Math.abs(diff)}일 전`;
+  if (diff === 1)  return '내일';
+  return `${diff}일 후`;
+}
+
+function nextDueLabel(lastDone, interval) {
+  if (!lastDone) return '—';
+  const last = parseDate(lastDone);
+  const next = new Date(last.getTime() + interval * 86400000);
+  const y = next.getFullYear(), m = String(next.getMonth()+1).padStart(2,'0'), d = String(next.getDate()).padStart(2,'0');
+  return relLabel(`${y}-${m}-${d}`);
+}
+
+// ── Status ──
+function calcStatus(lastDone, interval, warnDays) {
+  if (!lastDone) return { key: 'unset', label: '미설정', progress: 0 };
+  const last = parseDate(lastDone);
+  const today = parseDate(todayStr());
+  const elapsed = dayDiff(last, today);
+  const daysLeft = interval - elapsed;
+  const progress = Math.min(1, elapsed / interval);
+  if (daysLeft < 0)          return { key: 'overdue', label: `${Math.abs(daysLeft)}일 지남`, progress: 1 };
+  if (daysLeft <= warnDays)  return { key: 'soon',    label: `${daysLeft}일 후`,              progress };
+  return                            { key: 'ok',      label: `${daysLeft}일 후`,              progress };
+}
+
+function windowOverallStatus(task) {
+  const dates = Object.values(task.rooms);
+  if (dates.every(d => !d)) return calcStatus(null, task.interval, task.warnDays);
+  const oldest = dates.reduce((acc, d) => {
+    if (!d) return acc; // treat null as overdue
+    if (!acc) return d;
+    return d < acc ? d : acc;
+  }, null);
+  if (dates.some(d => !d)) return calcStatus(null, task.interval, task.warnDays);
+  return calcStatus(oldest, task.interval, task.warnDays);
+}
+
+const STATUS_LABEL = { ok: '양호', soon: '곧 해야함', overdue: '기간 지남', unset: '미설정' };
+const STATUS_DOT   = { ok: '●',   soon: '●',         overdue: '●',         unset: '○' };
+
+// ── Render ──
+function render() {
+  renderSummary();
+  renderGrid();
+}
+
+function renderSummary() {
+  const counts = { ok: 0, soon: 0, overdue: 0 };
+  tasks.forEach(t => {
+    const st = t.type === 'window' ? windowOverallStatus(t) : calcStatus(t.lastDone, t.interval, t.warnDays);
+    if (st.key === 'ok' || st.key === 'soon' || st.key === 'overdue') counts[st.key]++;
+  });
+  const bar = document.getElementById('summaryBar');
+  bar.innerHTML = '';
+  if (counts.overdue) bar.innerHTML += `<span class="summary-chip overdue">● 기간 지남 ${counts.overdue}</span>`;
+  if (counts.soon)    bar.innerHTML += `<span class="summary-chip soon">● 곧 해야함 ${counts.soon}</span>`;
+  if (counts.ok)      bar.innerHTML += `<span class="summary-chip ok">● 양호 ${counts.ok}</span>`;
+}
+
+function taskLastDone(t) {
+  if (t.type === 'window') {
+    const dates = Object.values(t.rooms).filter(Boolean);
+    return dates.length ? dates.reduce((a, b) => a < b ? a : b) : null;
+  }
+  return t.lastDone;
+}
+
+function sortedTasks() {
+  const copy = [...tasks];
+  if (sortMode === 'alpha') {
+    copy.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+  } else if (sortMode === 'newest') {
+    copy.sort((a, b) => {
+      const da = taskLastDone(a), db = taskLastDone(b);
+      if (!da && !db) return 0;
+      if (!da) return 1;
+      if (!db) return -1;
+      return db < da ? -1 : db > da ? 1 : 0;
+    });
+  } else {
+    copy.sort((a, b) => {
+      const da = taskLastDone(a), db = taskLastDone(b);
+      if (!da && !db) return 0;
+      if (!da) return -1;
+      if (!db) return 1;
+      return da < db ? -1 : da > db ? 1 : 0;
+    });
+  }
+  return copy;
+}
+
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  sortedTasks().forEach(t => grid.appendChild(t.type === 'window' ? makeWindowCard(t) : makeCard(t)));
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'add-card';
+  addBtn.textContent = '＋ 항목 추가';
+  addBtn.addEventListener('click', () => openEditModal(null));
+  grid.appendChild(addBtn);
+}
+
+function makeCard(task) {
+  const st = calcStatus(task.lastDone, task.interval, task.warnDays);
+  const pct = Math.round(st.progress * 100);
+
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `
+    <div class="card-header">
+      <div class="card-icon">${task.icon}</div>
+      <div class="card-title-group">
+        <div class="card-title">${task.name}</div>
+        <div class="card-meta">매 ${task.interval}일</div>
+      </div>
+      <span class="status-badge ${st.key}">${STATUS_DOT[st.key]} ${STATUS_LABEL[st.key]}</span>
+    </div>
+
+    ${st.key !== 'unset' ? `
+    <div class="progress-wrap">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill ${st.key}" style="width:${pct}%"></div>
+      </div>
+    </div>` : ''}
+
+    <div class="meta-row">
+      <div class="meta-item">
+        <span class="meta-label">마지막</span>
+        <span class="meta-value">${relLabel(task.lastDone)}</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">다음 예정</span>
+        <span class="meta-value">${nextDueLabel(task.lastDone, task.interval)}</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">남은 일수</span>
+        <span class="meta-value">${st.key === 'unset' ? '—' : st.label}</span>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <button class="btn-primary" data-id="${task.id}" data-action="done">✓ 오늘 완료</button>
+      <button class="btn-ghost"   data-id="${task.id}" data-action="edit">수정</button>
+    </div>
+  `;
+
+  card.querySelector('[data-action="done"]').addEventListener('click', () => {
+    task.lastDone = todayStr(); save(); render();
+  });
+  card.querySelector('[data-action="edit"]').addEventListener('click', () => openEditModal(task.id));
+  return card;
+}
+
+function makeWindowCard(task) {
+  const st = windowOverallStatus(task);
+
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  const roomRows = WINDOW_ROOMS.map(r => {
+    const rst = calcStatus(task.rooms[r], task.interval, task.warnDays);
+    return `
+      <div class="room-row">
+        <span class="room-name">${r}</span>
+        <span class="status-badge ${rst.key}" style="font-size:0.65rem;padding:1px 6px">${STATUS_LABEL[rst.key]}</span>
+        <span class="room-date">${relLabel(task.rooms[r])}</span>
+      </div>`;
+  }).join('');
+
+  card.innerHTML = `
+    <div class="card-header">
+      <div class="card-icon">${task.icon}</div>
+      <div class="card-title-group">
+        <div class="card-title">${task.name}</div>
+        <div class="card-meta">매 ${task.interval}일 · 방별 기록</div>
+      </div>
+      <span class="status-badge ${st.key}">${STATUS_DOT[st.key]} ${STATUS_LABEL[st.key]}</span>
+    </div>
+
+    <div class="room-list">${roomRows}</div>
+
+    <div class="card-footer">
+      <button class="btn-primary" id="btnWindowDone">✓ 완료 기록</button>
+      <button class="btn-ghost"   id="btnWindowEdit">수정</button>
+    </div>
+  `;
+
+  card.querySelector('#btnWindowDone').addEventListener('click', () => openRoomModal(task));
+  card.querySelector('#btnWindowEdit').addEventListener('click', () => openEditModal(task.id));
+  return card;
+}
+
+// ── Room modal ──
+function openRoomModal(task) {
+  const list = document.getElementById('roomCheckList');
+  list.innerHTML = '';
+  WINDOW_ROOMS.forEach(r => {
+    const item = document.createElement('label');
+    item.className = 'room-check-item';
+    item.innerHTML = `
+      <input type="checkbox" value="${r}" />
+      <span class="room-check-label">${r}</span>
+      <span class="room-check-date">${relLabel(task.rooms[r])}</span>
+    `;
+    list.appendChild(item);
+  });
+
+  document.getElementById('btnRoomCancel').onclick = () =>
+    document.getElementById('roomModal').classList.remove('open');
+
+  document.getElementById('btnRoomSave').onclick = () => {
+    const checked = [...list.querySelectorAll('input:checked')].map(i => i.value);
+    if (!checked.length) { alert('방을 하나 이상 선택해 주세요.'); return; }
+    const today = todayStr();
+    checked.forEach(r => task.rooms[r] = today);
+    save(); render();
+    document.getElementById('roomModal').classList.remove('open');
+  };
+
+  document.getElementById('roomModal').classList.add('open');
+}
+
+document.getElementById('roomModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+});
+
+// ── Edit modal ──
+function buildIconPicker(current) {
+  const picker = document.getElementById('iconPicker');
+  picker.innerHTML = '';
+  selectedIcon = current || ICONS[0];
+  ICONS.forEach(ic => {
+    const el = document.createElement('div');
+    el.className = 'icon-opt' + (ic === selectedIcon ? ' active' : '');
+    el.textContent = ic;
+    el.addEventListener('click', () => {
+      picker.querySelectorAll('.icon-opt').forEach(x => x.classList.remove('active'));
+      el.classList.add('active');
+      selectedIcon = ic;
+    });
+    picker.appendChild(el);
+  });
+}
+
+function openEditModal(id) {
+  editingId = id;
+  const del = document.getElementById('btnDelete');
+  if (id) {
+    const t = tasks.find(x => x.id === id);
+    document.getElementById('editTitle').textContent = '항목 수정';
+    del.style.display = 'block';
+    buildIconPicker(t.icon);
+    document.getElementById('inputName').value = t.name;
+    document.getElementById('inputInterval').value = t.interval;
+    document.getElementById('inputLastDone').value = t.type === 'default' ? (t.lastDone || '') : '';
+    document.getElementById('inputWarnDays').value = t.warnDays;
+  } else {
+    document.getElementById('editTitle').textContent = '항목 추가';
+    del.style.display = 'none';
+    buildIconPicker(ICONS[0]);
+    document.getElementById('inputName').value = '';
+    document.getElementById('inputInterval').value = '';
+    document.getElementById('inputLastDone').value = '';
+    document.getElementById('inputWarnDays').value = '3';
+  }
+  document.getElementById('editModal').classList.add('open');
+  document.getElementById('inputName').focus();
+}
+
+function closeEditModal() { document.getElementById('editModal').classList.remove('open'); editingId = null; }
+
+document.getElementById('btnEditCancel').addEventListener('click', closeEditModal);
+document.getElementById('editModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeEditModal(); });
+
+document.getElementById('btnEditSave').addEventListener('click', () => {
+  const name     = document.getElementById('inputName').value.trim();
+  const interval = parseInt(document.getElementById('inputInterval').value);
+  const lastDone = document.getElementById('inputLastDone').value || null;
+  const warnDays = parseInt(document.getElementById('inputWarnDays').value) || 3;
+
+  if (!name)                { alert('이름을 입력해 주세요.'); return; }
+  if (!interval || interval < 1) { alert('주기를 올바르게 입력해 주세요.'); return; }
+
+  if (editingId) {
+    const t = tasks.find(x => x.id === editingId);
+    t.icon = selectedIcon; t.name = name; t.interval = interval; t.warnDays = warnDays;
+    if (t.type === 'default') t.lastDone = lastDone;
+  } else {
+    tasks.push({ id: uid(), type: 'default', icon: selectedIcon, name, interval, lastDone, warnDays });
+  }
+  save(); render(); closeEditModal();
+});
+
+document.getElementById('btnDelete').addEventListener('click', () => {
+  if (!editingId || !confirm('이 항목을 삭제할까요?')) return;
+  tasks = tasks.filter(x => x.id !== editingId);
+  save(); render(); closeEditModal();
+});
+
+// ── Today label ──
+function setTodayLabel() {
+  const n = new Date();
+  const days = ['일','월','화','수','목','금','토'];
+  document.getElementById('todayLabel').textContent =
+    `${n.getFullYear()}.${String(n.getMonth()+1).padStart(2,'0')}.${String(n.getDate()).padStart(2,'0')} ${days[n.getDay()]}`;
+}
+
+// ── Sort buttons ──
+document.querySelectorAll('.sort-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    sortMode = btn.dataset.sort;
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderGrid();
+  });
+});
+
+// ── Init ──
+load(); setTodayLabel(); render();
+</script>
+</body>
+</html>

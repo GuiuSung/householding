@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>가계부 입력기</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #F5F2EE;
+    --surface: #FFFFFF;
+    --surface2: #F0EDE8;
+    --ink: #1A1714;
+    --ink2: #6B6560;
+    --accent: #C8502A;
+    --accent-soft: #F2E8E3;
+    --border: #E0DBD5;
+    --green: #2A7A4B;
+    --green-soft: #E3F2EB;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 420px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header */
+  .header {
+    padding: 20px 20px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .header-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink2);
+  }
+  .header-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--ink2);
+  }
+
+  /* Tab Bar */
+  .tabs {
+    display: flex;
+    gap: 6px;
+    padding: 16px 20px 0;
+  }
+  .tab {
+    flex: 1;
+    padding: 8px 0;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--ink2);
+    background: transparent;
+    border: none;
+  }
+  .tab.active {
+    background: var(--ink);
+    color: white;
+  }
+
+  /* Form Panel */
+  .panel {
+    flex: 1;
+    padding: 16px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .form-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink2);
+  }
+
+  input, select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-family: 'Noto Sans KR', sans-serif;
+    color: var(--ink);
+    background: var(--surface);
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus, select:focus {
+    border-color: var(--ink);
+  }
+  #inputAmount {
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+  }
+  input[type="date"] {
+    font-family: 'DM Mono', monospace;
+  }
+
+  .amount-wrap {
+    position: relative;
+  }
+  .amount-wrap::after {
+    content: '원';
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    color: var(--ink2);
+    pointer-events: none;
+  }
+
+  /* Quick amount buttons */
+  .quick-amounts {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .quick-btn {
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--ink2);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .quick-btn:hover, .quick-btn:active {
+    border-color: var(--ink);
+    color: var(--ink);
+    background: var(--surface2);
+  }
+
+  /* Category chips */
+  .cat-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .cat-chip {
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    font-size: 13px;
+    color: var(--ink2);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .cat-chip.selected {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* Sub category */
+  .sub-cats {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    min-height: 42px;
+    align-items: center;
+  }
+  .sub-chip {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1.5px solid transparent;
+    background: white;
+    font-size: 12px;
+    color: var(--ink2);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .sub-chip.selected {
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .sub-placeholder {
+    font-size: 12px;
+    color: #BBBBBB;
+  }
+
+  /* Payment chips */
+  .pay-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .pay-chip {
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--ink2);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .pay-chip.selected {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: white;
+  }
+
+  /* Submit */
+  .submit-btn {
+    width: 100%;
+    padding: 17px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 700;
+    font-family: 'Noto Sans KR', sans-serif;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: 4px;
+  }
+  .submit-btn:hover { background: #B04422; }
+  .submit-btn:active { transform: scale(0.98); }
+  .submit-btn:disabled { background: #CCCCCC; cursor: default; }
+
+  /* Log Panel */
+  .log-panel {
+    padding: 8px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+  }
+  .log-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .log-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--ink2);
+  }
+
+  .log-item {
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: slideIn 0.2s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .log-cat-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .log-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .log-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .log-meta {
+    font-size: 11px;
+    color: var(--ink2);
+    margin-top: 2px;
+  }
+  .log-amount {
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ink);
+    flex-shrink: 0;
+  }
+  .log-delete {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: #CCCCCC;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .log-delete:hover { background: #FFF0EE; color: var(--accent); }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--ink2);
+    font-size: 14px;
+    line-height: 1.8;
+  }
+  .empty-icon { font-size: 36px; margin-bottom: 12px; }
+
+  /* Export area */
+  .export-area {
+    margin-top: 8px;
+    padding: 16px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--ink2);
+    line-height: 1.8;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .export-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .copy-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: white;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .copy-btn:hover { border-color: var(--ink); }
+  .copy-btn.copied { background: var(--green-soft); border-color: var(--green); color: var(--green); }
+
+  .total-bar {
+    background: var(--ink);
+    color: white;
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .total-label { font-size: 12px; opacity: 0.7; }
+  .total-amount { font-family: 'DM Mono', monospace; font-size: 17px; font-weight: 500; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 14px;
+    opacity: 0;
+    transition: all 0.25s;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 999;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .memo-input { font-size: 14px !important; }
+
+  select option { font-family: 'Noto Sans KR', sans-serif; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-title">가계부 입력기 · 건우&보경</div>
+    <div class="header-date" id="headerDate"></div>
+  </div>
+
+  <div class="tabs" style="padding-top:16px;">
+    <button class="tab active" onclick="switchTab('input')">✏️ 입력</button>
+    <button class="tab" onclick="switchTab('log')">📋 내역</button>
+    <button class="tab" onclick="switchTab('export')">📤 내보내기</button>
+  </div>
+
+  <!-- INPUT TAB -->
+  <div id="tab-input" class="panel">
+
+    <div class="form-group">
+      <div class="form-label">날짜</div>
+      <input type="date" id="inputDate">
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">금액</div>
+      <div class="amount-wrap">
+        <input type="text" id="inputAmount" inputmode="numeric" placeholder="0" style="padding-right:40px;">
+      </div>
+      <div class="quick-amounts">
+        <button class="quick-btn" onclick="addAmount(1000)">+1천</button>
+        <button class="quick-btn" onclick="addAmount(5000)">+5천</button>
+        <button class="quick-btn" onclick="addAmount(10000)">+1만</button>
+        <button class="quick-btn" onclick="addAmount(30000)">+3만</button>
+        <button class="quick-btn" onclick="addAmount(50000)">+5만</button>
+        <button class="quick-btn" onclick="addAmount(100000)">+10만</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">항목 (대분류)</div>
+      <div class="cat-row" id="catRow"></div>
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">소분류</div>
+      <div class="sub-cats" id="subCats">
+        <span class="sub-placeholder">대분류를 먼저 선택하세요</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">결제수단</div>
+      <div class="pay-chips" id="payChips"></div>
+    </div>
+
+    <div class="form-group">
+      <div class="form-label">메모 (선택)</div>
+      <input type="text" class="memo-input" id="inputMemo" placeholder="간단한 메모">
+    </div>
+
+    <button class="submit-btn" id="submitBtn" onclick="submitEntry()">+ 추가하기</button>
+  </div>
+
+  <!-- LOG TAB -->
+  <div id="tab-log" class="panel" style="display:none; padding-top:8px;">
+    <div class="log-header">
+      <div class="log-title">기록된 지출</div>
+      <div class="log-count" id="logCount">0건</div>
+    </div>
+    <div id="logList"></div>
+  </div>
+
+  <!-- EXPORT TAB -->
+  <div id="tab-export" class="panel" style="display:none; padding-top:8px;">
+    <div class="log-header">
+      <div class="log-title">엑셀 붙여넣기용</div>
+    </div>
+    <div id="totalBar" class="total-bar" style="display:none;">
+      <div class="total-label">총 지출</div>
+      <div class="total-amount" id="totalAmount">0원</div>
+    </div>
+    <div>
+      <div class="export-header">
+        <span style="font-size:12px; color:var(--ink2);">탭 구분 텍스트 (엑셀에 붙여넣기)</span>
+        <button class="copy-btn" id="copyBtn" onclick="copyExport()">복사</button>
+      </div>
+      <div class="export-area" id="exportArea">아직 입력된 내역이 없습니다.</div>
+    </div>
+    <button class="submit-btn" style="background:#E53935; margin-top:8px;" onclick="clearAll()">🗑 전체 초기화</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CATEGORIES = {
+  '식비':     { icon:'🍽', subs:['식자재','외식','카페류'] },
+  '생활용품': { icon:'🛒', subs:['생활소모품','가전/가구','침구/인테리어'] },
+  '꾸밈비':   { icon:'👗', subs:['의류/잡화','미용/헤어','세탁/수선'] },
+  '건강':     { icon:'💊', subs:['병원/약국','건강보조','예방/검진'] },
+  '자기계발': { icon:'📚', subs:['스터디/수강','운동','도서','구독/레터'] },
+  '자동차':   { icon:'🚗', subs:['주유','주차/통행료','대중교통','택시','소모품/수리','보험/세금','렌트카'] },
+  '기부':     { icon:'💝', subs:['서울대천원식사','세이브더칠드런'] },
+  '취미/여가':{ icon:'🎮', subs:['코인노래방','요가','도자기','헬스장'] },
+  '여행':     { icon:'✈️', subs:['국내여행','해외여행'] },
+  '문화생활': { icon:'🎭', subs:['공연/전시','OTT','기타 입장료'] },
+  '경조사':   { icon:'🎁', subs:['결혼','장례','생일/기념일','기타'] },
+  '주거':     { icon:'🏠', subs:['관리비','도시가스','대출이자','수리/청소','취득세'] },
+  '통신비':   { icon:'📱', subs:['핸드폰','인터넷','기타'] },
+  '보험':     { icon:'🔒', subs:['생명보험','실손보험','기타'] },
+  '용돈':     { icon:'💸', subs:['건우용돈','보경용돈'] },
+  '기타':     { icon:'📌', subs:['기타지출'] },
+};
+
+const PAYMENTS = ['라이킷카드_건우','네이버카드','SC카드','현금/이체','케이뱅크카드','사원증카드','토스하나카드','토스삼성카드','네이버머니카드','더모아카드','상품권','법인카드'];
+
+let entries = JSON.parse(localStorage.getItem('ledger_entries') || '[]');
+let selectedCat = '';
+let selectedSub = '';
+let selectedPay = '';
+
+// Init
+const today = new Date();
+document.getElementById('inputDate').value = today.toISOString().split('T')[0];
+document.getElementById('headerDate').textContent = `${today.getMonth()+1}월 ${today.getDate()}일`;
+
+// Build category chips
+const catRow = document.getElementById('catRow');
+Object.entries(CATEGORIES).forEach(([cat, info]) => {
+  const chip = document.createElement('button');
+  chip.className = 'cat-chip';
+  chip.textContent = info.icon + ' ' + cat;
+  chip.onclick = () => selectCat(cat);
+  catRow.appendChild(chip);
+});
+
+// Build payment chips
+const payChips = document.getElementById('payChips');
+PAYMENTS.forEach(p => {
+  const chip = document.createElement('button');
+  chip.className = 'pay-chip';
+  chip.textContent = p;
+  chip.onclick = () => selectPay(p, chip);
+  payChips.appendChild(chip);
+});
+
+function selectCat(cat) {
+  selectedCat = cat;
+  selectedSub = '';
+  document.querySelectorAll('.cat-chip').forEach(c => {
+    c.classList.toggle('selected', c.textContent.includes(cat));
+  });
+  const subEl = document.getElementById('subCats');
+  subEl.innerHTML = '';
+  CATEGORIES[cat].subs.forEach(s => {
+    const chip = document.createElement('button');
+    chip.className = 'sub-chip';
+    chip.textContent = s;
+    chip.onclick = () => {
+      selectedSub = s;
+      document.querySelectorAll('.sub-chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+    };
+    subEl.appendChild(chip);
+  });
+}
+
+function selectPay(pay, el) {
+  selectedPay = pay;
+  document.querySelectorAll('.pay-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function getRawAmount() {
+  return parseInt(document.getElementById('inputAmount').value.replace(/,/g, '') || 0);
+}
+function setFormattedAmount(v) {
+  document.getElementById('inputAmount').value = v > 0 ? v.toLocaleString() : '';
+}
+
+document.getElementById('inputAmount').addEventListener('input', function() {
+  const raw = this.value.replace(/,/g, '').replace(/[^0-9]/g, '');
+  const num = parseInt(raw || 0);
+  const pos = this.selectionStart;
+  const prevLen = this.value.length;
+  this.value = num > 0 ? num.toLocaleString() : '';
+  // 커서 위치 보정
+  const diff = this.value.length - prevLen;
+  this.setSelectionRange(pos + diff, pos + diff);
+});
+
+function addAmount(v) {
+  setFormattedAmount(getRawAmount() + v);
+}
+
+function submitEntry() {
+  const date = document.getElementById('inputDate').value;
+  const amount = getRawAmount();
+  const memo = document.getElementById('inputMemo').value.trim();
+
+  if (!date) { showToast('날짜를 입력해주세요'); return; }
+  if (!amount || amount <= 0) { showToast('금액을 입력해주세요'); return; }
+  if (!selectedCat) { showToast('항목을 선택해주세요'); return; }
+  if (!selectedSub) { showToast('소분류를 선택해주세요'); return; }
+  if (!selectedPay) { showToast('결제수단을 선택해주세요'); return; }
+
+  const entry = { id: Date.now(), date, amount, cat: selectedCat, sub: selectedSub, pay: selectedPay, memo };
+  entries.unshift(entry);
+  save();
+  showToast('✅ 추가됐어요!');
+
+  setFormattedAmount(0);
+  document.getElementById('inputMemo').value = '';
+  document.getElementById('inputDate').value = today.toISOString().split('T')[0];
+}
+
+function save() {
+  localStorage.setItem('ledger_entries', JSON.stringify(entries));
+  renderLog();
+  renderExport();
+}
+
+function renderLog() {
+  const list = document.getElementById('logList');
+  document.getElementById('logCount').textContent = entries.length + '건';
+  if (entries.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div>아직 입력된 내역이 없어요.<br>입력 탭에서 지출을 추가해보세요.</div>';
+    return;
+  }
+  list.innerHTML = entries.map(e => `
+    <div class="log-item">
+      <div class="log-cat-badge">${CATEGORIES[e.cat]?.icon || '📌'}</div>
+      <div class="log-info">
+        <div class="log-name">${e.cat} · ${e.sub}</div>
+        <div class="log-meta">${formatDate(e.date)} &nbsp;·&nbsp; ${e.pay}${e.memo ? ' · ' + e.memo : ''}</div>
+      </div>
+      <div class="log-amount">${e.amount.toLocaleString()}</div>
+      <button class="log-delete" onclick="deleteEntry(${e.id})">×</button>
+    </div>
+  `).join('');
+}
+
+function renderExport() {
+  const area = document.getElementById('exportArea');
+  const totalBar = document.getElementById('totalBar');
+  if (entries.length === 0) {
+    area.textContent = '아직 입력된 내역이 없습니다.';
+    totalBar.style.display = 'none';
+    return;
+  }
+  const sorted = [...entries].sort((a,b) => a.date.localeCompare(b.date));
+  const total = sorted.reduce((s, e) => s + e.amount, 0);
+  totalBar.style.display = 'flex';
+  document.getElementById('totalAmount').textContent = total.toLocaleString() + '원';
+  // Tab-separated: 구분 | 날짜 | 대분류 | 소분류 | 사용내역 | 금액 | 결제수단
+  const header = '구분\t날짜\t대분류\t소분류\t사용내역\t금액\t결제수단';
+  const rows = sorted.map(e =>
+    `지출\t${e.date}\t${e.cat}\t${e.sub}\t${e.memo || e.sub}\t${e.amount}\t${e.pay}`
+  );
+  area.textContent = [header, ...rows].join('\n');
+}
+
+function deleteEntry(id) {
+  entries = entries.filter(e => e.id !== id);
+  save();
+}
+
+function clearAll() {
+  if (!confirm('정말 전체 초기화할까요?')) return;
+  entries = [];
+  save();
+  showToast('초기화됐어요');
+}
+
+function copyExport() {
+  const text = document.getElementById('exportArea').textContent;
+  if (text === '아직 입력된 내역이 없습니다.') return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✓ 복사됨';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '복사'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function formatDate(d) {
+  const [y,m,day] = d.split('-');
+  return `${parseInt(m)}/${parseInt(day)}`;
+}
+
+function switchTab(tab) {
+  ['input','log','export'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t===tab ? 'flex' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach((el, i) => {
+    el.classList.toggle('active', ['input','log','export'][i] === tab);
+  });
+  if (tab === 'log') renderLog();
+  if (tab === 'export') renderExport();
+}
+
+// Init render
+renderLog();
+renderExport();
+</script>
+</body>
+</html>

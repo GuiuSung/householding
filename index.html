@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>가계부 입력기</title>
+<title>가계부 · 건우&보경</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap');
 
@@ -13,735 +13,553 @@
     --surface2: #F0EDE8;
     --ink: #1A1714;
     --ink2: #6B6560;
-    --accent: #C8502A;
-    --accent-soft: #F2E8E3;
     --border: #E0DBD5;
-    --green: #2A7A4B;
-    --green-soft: #E3F2EB;
     --radius: 16px;
     --radius-sm: 10px;
+    --c-income:  #2A6E4B;  --c-income-soft:  #E3F2EB;
+    --c-saving:  #1E5AA0;  --c-saving-soft:  #E3ECFA;
+    --c-fixed:   #7B3FA0;  --c-fixed-soft:   #F0E8FA;
+    --c-spend:   #C8502A;  --c-spend-soft:   #F2E8E3;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   body {
     font-family: 'Noto Sans KR', sans-serif;
-    background: var(--bg);
-    color: var(--ink);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    background: var(--bg); color: var(--ink);
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
   }
+  .app { width: 100%; max-width: 420px; min-height: 100vh; display: flex; flex-direction: column; }
 
-  .app {
-    width: 100%;
-    max-width: 420px;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
+  .header { padding: 20px 20px 0; display: flex; justify-content: space-between; align-items: flex-start; }
+  .header-title { font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--ink2); }
+  .header-date { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--ink2); }
 
-  /* Header */
-  .header {
-    padding: 20px 20px 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+  .nav-tabs { display: flex; gap: 6px; padding: 14px 20px 0; }
+  .nav-tab {
+    flex: 1; padding: 8px 0; text-align: center; font-size: 13px; font-weight: 500;
+    border-radius: var(--radius-sm); cursor: pointer; border: none;
+    background: transparent; color: var(--ink2); transition: all .2s;
   }
-  .header-title {
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--ink2);
-  }
-  .header-date {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--ink2);
-  }
+  .nav-tab.active { background: var(--ink); color: #fff; }
 
-  /* Tab Bar */
-  .tabs {
-    display: flex;
-    gap: 6px;
-    padding: 16px 20px 0;
+  .type-row { display: flex; gap: 6px; padding: 14px 20px 0; }
+  .type-btn {
+    flex: 1; padding: 10px 4px; border: 2px solid var(--border);
+    border-radius: var(--radius-sm); background: var(--surface);
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    color: var(--ink2); transition: all .15s; text-align: center; line-height: 1.3;
   }
-  .tab {
-    flex: 1;
-    padding: 8px 0;
-    text-align: center;
-    font-size: 13px;
-    font-weight: 500;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: all 0.2s;
-    color: var(--ink2);
-    background: transparent;
-    border: none;
-  }
-  .tab.active {
-    background: var(--ink);
-    color: white;
-  }
+  .type-btn span { display: block; font-size: 16px; margin-bottom: 2px; }
+  .type-btn.t-income.active { border-color: var(--c-income); background: var(--c-income-soft); color: var(--c-income); }
+  .type-btn.t-saving.active { border-color: var(--c-saving); background: var(--c-saving-soft); color: var(--c-saving); }
+  .type-btn.t-fixed.active  { border-color: var(--c-fixed);  background: var(--c-fixed-soft);  color: var(--c-fixed); }
+  .type-btn.t-spend.active  { border-color: var(--c-spend);  background: var(--c-spend-soft);  color: var(--c-spend); }
 
-  /* Form Panel */
-  .panel {
-    flex: 1;
-    padding: 16px 20px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
+  .panel { flex: 1; padding: 14px 20px 24px; display: flex; flex-direction: column; gap: 12px; }
 
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .form-label {
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink2);
-  }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-label { font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--ink2); }
 
   input, select {
-    width: 100%;
-    padding: 14px 16px;
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-size: 15px;
-    font-family: 'Noto Sans KR', sans-serif;
-    color: var(--ink);
-    background: var(--surface);
-    appearance: none;
-    -webkit-appearance: none;
-    outline: none;
-    transition: border-color 0.15s;
+    width: 100%; padding: 14px 16px; border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); font-size: 15px; font-family: 'Noto Sans KR', sans-serif;
+    color: var(--ink); background: var(--surface); appearance: none; -webkit-appearance: none;
+    outline: none; transition: border-color .15s;
   }
-  input:focus, select:focus {
-    border-color: var(--ink);
-  }
-  #inputAmount {
-    font-family: 'DM Mono', monospace;
-    font-size: 18px;
-    font-weight: 500;
-  }
-  input[type="date"] {
-    font-family: 'DM Mono', monospace;
-  }
+  input:focus, select:focus { border-color: var(--ink); }
+  #inputAmount { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 500; padding-right: 40px; }
+  input[type="date"] { font-family: 'DM Mono', monospace; }
 
-  .amount-wrap {
-    position: relative;
-  }
+  .amount-wrap { position: relative; }
   .amount-wrap::after {
-    content: '원';
-    position: absolute;
-    right: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 13px;
-    color: var(--ink2);
-    pointer-events: none;
+    content: '원'; position: absolute; right: 16px; top: 50%;
+    transform: translateY(-50%); font-size: 13px; color: var(--ink2); pointer-events: none;
   }
 
-  /* Quick amount buttons */
-  .quick-amounts {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
+  .quick-amounts { display: flex; gap: 6px; flex-wrap: wrap; }
   .quick-btn {
-    padding: 6px 12px;
-    border-radius: 20px;
-    border: 1.5px solid var(--border);
-    background: var(--surface);
-    font-size: 12px;
-    font-family: 'DM Mono', monospace;
-    color: var(--ink2);
-    cursor: pointer;
-    transition: all 0.15s;
+    padding: 6px 12px; border-radius: 20px; border: 1.5px solid var(--border);
+    background: var(--surface); font-size: 12px; font-family: 'DM Mono', monospace;
+    color: var(--ink2); cursor: pointer; transition: all .15s;
   }
-  .quick-btn:hover, .quick-btn:active {
-    border-color: var(--ink);
-    color: var(--ink);
-    background: var(--surface2);
-  }
+  .quick-btn:active { background: var(--surface2); border-color: var(--ink); color: var(--ink); }
 
-  /* Category chips */
-  .cat-row {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
+  .chip-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip {
+    padding: 7px 14px; border-radius: 20px; border: 1.5px solid var(--border);
+    background: var(--surface); font-size: 13px; color: var(--ink2);
+    cursor: pointer; transition: all .15s; white-space: nowrap;
   }
-  .cat-chip {
-    padding: 7px 14px;
-    border-radius: 20px;
-    border: 1.5px solid var(--border);
-    background: var(--surface);
-    font-size: 13px;
-    color: var(--ink2);
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-  .cat-chip.selected {
-    border-color: var(--accent);
-    background: var(--accent-soft);
-    color: var(--accent);
-    font-weight: 500;
-  }
+  .chip.sel-income { border-color: var(--c-income); background: var(--c-income-soft); color: var(--c-income); font-weight: 500; }
+  .chip.sel-saving { border-color: var(--c-saving); background: var(--c-saving-soft); color: var(--c-saving); font-weight: 500; }
+  .chip.sel-fixed  { border-color: var(--c-fixed);  background: var(--c-fixed-soft);  color: var(--c-fixed);  font-weight: 500; }
+  .chip.sel-spend  { border-color: var(--c-spend);  background: var(--c-spend-soft);  color: var(--c-spend);  font-weight: 500; }
 
-  /* Sub category */
-  .sub-cats {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    padding: 8px 12px;
-    background: var(--surface2);
-    border-radius: var(--radius-sm);
-    min-height: 42px;
-    align-items: center;
+  .sub-box {
+    display: flex; gap: 6px; flex-wrap: wrap; padding: 8px 12px;
+    background: var(--surface2); border-radius: var(--radius-sm); min-height: 42px; align-items: center;
   }
   .sub-chip {
-    padding: 5px 12px;
-    border-radius: 20px;
-    border: 1.5px solid transparent;
-    background: white;
-    font-size: 12px;
-    color: var(--ink2);
-    cursor: pointer;
-    transition: all 0.15s;
+    padding: 5px 12px; border-radius: 20px; border: 1.5px solid transparent;
+    background: #fff; font-size: 12px; color: var(--ink2); cursor: pointer; transition: all .15s;
   }
-  .sub-chip.selected {
-    border-color: var(--accent);
-    color: var(--accent);
-    font-weight: 500;
-  }
-  .sub-placeholder {
-    font-size: 12px;
-    color: #BBBBBB;
-  }
+  .sub-placeholder { font-size: 12px; color: #BBBBBB; }
 
-  /* Payment chips */
-  .pay-chips {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
   .pay-chip {
-    padding: 7px 14px;
-    border-radius: 20px;
-    border: 1.5px solid var(--border);
-    background: var(--surface);
-    font-size: 12px;
-    font-family: 'DM Mono', monospace;
-    color: var(--ink2);
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
+    padding: 7px 14px; border-radius: 20px; border: 1.5px solid var(--border);
+    background: var(--surface); font-size: 12px; font-family: 'DM Mono', monospace;
+    color: var(--ink2); cursor: pointer; transition: all .15s; white-space: nowrap;
   }
-  .pay-chip.selected {
-    border-color: var(--ink);
-    background: var(--ink);
-    color: white;
-  }
+  .pay-chip.selected { border-color: var(--ink); background: var(--ink); color: #fff; }
 
-  /* Submit */
   .submit-btn {
-    width: 100%;
-    padding: 17px;
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: var(--radius);
-    font-size: 15px;
-    font-weight: 700;
-    font-family: 'Noto Sans KR', sans-serif;
-    letter-spacing: 0.03em;
-    cursor: pointer;
-    transition: all 0.15s;
-    margin-top: 4px;
+    width: 100%; padding: 17px; border: none; border-radius: var(--radius);
+    font-size: 15px; font-weight: 700; font-family: 'Noto Sans KR', sans-serif;
+    letter-spacing: .03em; cursor: pointer; transition: all .15s; margin-top: 4px; color: #fff;
   }
-  .submit-btn:hover { background: #B04422; }
-  .submit-btn:active { transform: scale(0.98); }
-  .submit-btn:disabled { background: #CCCCCC; cursor: default; }
+  .submit-btn.btn-income { background: var(--c-income); }
+  .submit-btn.btn-saving { background: var(--c-saving); }
+  .submit-btn.btn-fixed  { background: var(--c-fixed); }
+  .submit-btn.btn-spend  { background: var(--c-spend); }
+  .submit-btn:active { transform: scale(.98); }
 
-  /* Log Panel */
-  .log-panel {
-    padding: 8px 20px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .log-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-  }
-  .log-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--ink);
-  }
-  .log-count {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: var(--ink2);
-  }
+  .log-header { display: flex; justify-content: space-between; align-items: center; padding: 6px 0 6px; }
+  .log-title { font-size: 13px; font-weight: 700; }
+  .log-count { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--ink2); }
 
+  .filter-row { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+  .filter-btn {
+    padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--border);
+    background: var(--surface); font-size: 12px; color: var(--ink2); cursor: pointer; transition: all .15s;
+  }
+  .filter-btn.on { border-color: var(--ink); background: var(--ink); color: #fff; }
+
+  .summary-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .summary-card { background: var(--surface); border-radius: var(--radius-sm); padding: 12px 14px; }
+  .summary-label { font-size: 10px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--ink2); margin-bottom: 4px; }
+  .summary-val { font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500; }
+
+  .log-list-gap { display: flex; flex-direction: column; gap: 8px; }
   .log-item {
-    background: var(--surface);
-    border-radius: var(--radius-sm);
-    padding: 14px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    animation: slideIn 0.2s ease;
+    background: var(--surface); border-radius: var(--radius-sm);
+    padding: 12px 14px; display: flex; align-items: center; gap: 10px;
+    animation: slideIn .2s ease;
   }
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateY(-8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .log-cat-badge {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    background: var(--accent-soft);
-    color: var(--accent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    flex-shrink: 0;
-  }
-  .log-info {
-    flex: 1;
-    min-width: 0;
-  }
-  .log-name {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--ink);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .log-meta {
-    font-size: 11px;
-    color: var(--ink2);
-    margin-top: 2px;
-  }
-  .log-amount {
-    font-family: 'DM Mono', monospace;
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--ink);
-    flex-shrink: 0;
-  }
-  .log-delete {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    border: none;
-    background: transparent;
-    color: #CCCCCC;
-    cursor: pointer;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: all 0.15s;
-  }
-  .log-delete:hover { background: #FFF0EE; color: var(--accent); }
+  @keyframes slideIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
 
-  .empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--ink2);
-    font-size: 14px;
-    line-height: 1.8;
+  .log-badge {
+    width: 34px; height: 34px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;
   }
+  .badge-income { background: var(--c-income-soft); }
+  .badge-saving { background: var(--c-saving-soft); }
+  .badge-fixed  { background: var(--c-fixed-soft); }
+  .badge-spend  { background: var(--c-spend-soft); }
+
+  .log-info { flex: 1; min-width: 0; }
+  .log-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .log-meta { font-size: 11px; color: var(--ink2); margin-top: 2px; }
+  .log-amount { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500; flex-shrink: 0; }
+  .log-amount.income { color: var(--c-income); }
+  .log-amount.saving { color: var(--c-saving); }
+  .log-amount.fixed  { color: var(--c-fixed); }
+  .log-amount.spend  { color: var(--c-spend); }
+
+  .log-del {
+    width: 26px; height: 26px; border-radius: 7px; border: none;
+    background: transparent; color: #CCC; cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .15s;
+  }
+  .log-del:hover { background: #FFF0EE; color: var(--c-spend); }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--ink2); font-size: 14px; line-height: 1.8; }
   .empty-icon { font-size: 36px; margin-bottom: 12px; }
 
-  /* Export area */
+  .export-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
   .export-area {
-    margin-top: 8px;
-    padding: 16px;
-    background: var(--surface2);
-    border-radius: var(--radius-sm);
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: var(--ink2);
-    line-height: 1.8;
-    white-space: pre;
-    overflow-x: auto;
-  }
-  .export-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
+    background: var(--surface2); border-radius: var(--radius-sm); padding: 14px;
+    font-family: 'DM Mono', monospace; font-size: 11px; color: var(--ink2);
+    line-height: 1.9; white-space: pre; overflow-x: auto;
   }
   .copy-btn {
-    padding: 6px 14px;
-    border-radius: 20px;
-    border: 1.5px solid var(--border);
-    background: white;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.15s;
-    font-family: 'Noto Sans KR', sans-serif;
+    padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--border);
+    background: #fff; font-size: 12px; cursor: pointer; transition: all .15s; font-family: 'Noto Sans KR', sans-serif;
   }
-  .copy-btn:hover { border-color: var(--ink); }
-  .copy-btn.copied { background: var(--green-soft); border-color: var(--green); color: var(--green); }
+  .copy-btn.copied { background: var(--c-income-soft); border-color: var(--c-income); color: var(--c-income); }
 
-  .total-bar {
-    background: var(--ink);
-    color: white;
-    border-radius: var(--radius-sm);
-    padding: 14px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  .clear-btn {
+    width: 100%; padding: 15px; background: #E53935; color: #fff; border: none;
+    border-radius: var(--radius); font-size: 14px; font-weight: 700;
+    font-family: 'Noto Sans KR', sans-serif; cursor: pointer; margin-top: 8px;
   }
-  .total-label { font-size: 12px; opacity: 0.7; }
-  .total-amount { font-family: 'DM Mono', monospace; font-size: 17px; font-weight: 500; }
 
-  /* Toast */
   .toast {
-    position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: var(--ink);
-    color: white;
-    padding: 12px 24px;
-    border-radius: 30px;
-    font-size: 14px;
-    opacity: 0;
-    transition: all 0.25s;
-    pointer-events: none;
-    white-space: nowrap;
-    z-index: 999;
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(16px);
+    background: var(--ink); color: #fff; padding: 12px 22px;
+    border-radius: 30px; font-size: 14px; opacity: 0;
+    transition: all .25s; pointer-events: none; white-space: nowrap; z-index: 999;
   }
-  .toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-
-  .memo-input { font-size: 14px !important; }
-
-  select option { font-family: 'Noto Sans KR', sans-serif; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
 <div class="app">
   <div class="header">
-    <div class="header-title">가계부 입력기 · 건우&보경</div>
+    <div class="header-title">가계부 · 건우&amp;보경</div>
     <div class="header-date" id="headerDate"></div>
   </div>
 
-  <div class="tabs" style="padding-top:16px;">
-    <button class="tab active" onclick="switchTab('input')">✏️ 입력</button>
-    <button class="tab" onclick="switchTab('log')">📋 내역</button>
-    <button class="tab" onclick="switchTab('export')">📤 내보내기</button>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchNav('input')">✏️ 입력</button>
+    <button class="nav-tab" onclick="switchNav('log')">📋 내역</button>
+    <button class="nav-tab" onclick="switchNav('export')">📤 내보내기</button>
   </div>
 
-  <!-- INPUT TAB -->
-  <div id="tab-input" class="panel">
-
-    <div class="form-group">
-      <div class="form-label">날짜</div>
-      <input type="date" id="inputDate">
+  <!-- INPUT -->
+  <div id="nav-input">
+    <div class="type-row">
+      <button class="type-btn t-income active" onclick="selectType('income',this)"><span>💰</span>수입</button>
+      <button class="type-btn t-saving"        onclick="selectType('saving',this)"><span>🏦</span>저축</button>
+      <button class="type-btn t-fixed"         onclick="selectType('fixed',this)"><span>📌</span>고정</button>
+      <button class="type-btn t-spend"         onclick="selectType('spend',this)"><span>🛒</span>지출</button>
     </div>
-
-    <div class="form-group">
-      <div class="form-label">금액</div>
-      <div class="amount-wrap">
-        <input type="text" id="inputAmount" inputmode="numeric" placeholder="0" style="padding-right:40px;">
+    <div class="panel">
+      <div class="form-group">
+        <div class="form-label">날짜</div>
+        <input type="date" id="inputDate">
       </div>
-      <div class="quick-amounts">
-        <button class="quick-btn" onclick="addAmount(1000)">+1천</button>
-        <button class="quick-btn" onclick="addAmount(5000)">+5천</button>
-        <button class="quick-btn" onclick="addAmount(10000)">+1만</button>
-        <button class="quick-btn" onclick="addAmount(30000)">+3만</button>
-        <button class="quick-btn" onclick="addAmount(50000)">+5만</button>
-        <button class="quick-btn" onclick="addAmount(100000)">+10만</button>
+      <div class="form-group">
+        <div class="form-label">금액</div>
+        <div class="amount-wrap">
+          <input type="text" id="inputAmount" inputmode="numeric" placeholder="0">
+        </div>
+        <div class="quick-amounts">
+          <button class="quick-btn" onclick="addAmt(10000)">+1만</button>
+          <button class="quick-btn" onclick="addAmt(30000)">+3만</button>
+          <button class="quick-btn" onclick="addAmt(50000)">+5만</button>
+          <button class="quick-btn" onclick="addAmt(100000)">+10만</button>
+          <button class="quick-btn" onclick="addAmt(500000)">+50만</button>
+          <button class="quick-btn" onclick="addAmt(1000000)">+100만</button>
+        </div>
       </div>
-    </div>
-
-    <div class="form-group">
-      <div class="form-label">항목 (대분류)</div>
-      <div class="cat-row" id="catRow"></div>
-    </div>
-
-    <div class="form-group">
-      <div class="form-label">소분류</div>
-      <div class="sub-cats" id="subCats">
-        <span class="sub-placeholder">대분류를 먼저 선택하세요</span>
+      <div class="form-group">
+        <div class="form-label">대분류</div>
+        <div class="chip-row" id="catRow"></div>
       </div>
+      <div class="form-group">
+        <div class="form-label">소분류</div>
+        <div class="sub-box" id="subBox"><span class="sub-placeholder">대분류를 먼저 선택하세요</span></div>
+      </div>
+      <div class="form-group" id="payGroup">
+        <div class="form-label">결제수단</div>
+        <div class="chip-row" id="payRow"></div>
+      </div>
+      <div class="form-group">
+        <div class="form-label">메모 (선택)</div>
+        <input type="text" id="inputMemo" placeholder="간단한 메모" style="font-size:14px;">
+      </div>
+      <button class="submit-btn btn-income" id="submitBtn" onclick="submitEntry()">+ 추가하기</button>
     </div>
-
-    <div class="form-group">
-      <div class="form-label">결제수단</div>
-      <div class="pay-chips" id="payChips"></div>
-    </div>
-
-    <div class="form-group">
-      <div class="form-label">메모 (선택)</div>
-      <input type="text" class="memo-input" id="inputMemo" placeholder="간단한 메모">
-    </div>
-
-    <button class="submit-btn" id="submitBtn" onclick="submitEntry()">+ 추가하기</button>
   </div>
 
-  <!-- LOG TAB -->
-  <div id="tab-log" class="panel" style="display:none; padding-top:8px;">
+  <!-- LOG -->
+  <div id="nav-log" style="display:none;" class="panel">
     <div class="log-header">
-      <div class="log-title">기록된 지출</div>
+      <div class="log-title">기록된 내역</div>
       <div class="log-count" id="logCount">0건</div>
     </div>
-    <div id="logList"></div>
+    <div class="filter-row">
+      <button class="filter-btn on" onclick="setFilter('all',this)">전체</button>
+      <button class="filter-btn" onclick="setFilter('income',this)">💰 수입</button>
+      <button class="filter-btn" onclick="setFilter('saving',this)">🏦 저축</button>
+      <button class="filter-btn" onclick="setFilter('fixed',this)">📌 고정</button>
+      <button class="filter-btn" onclick="setFilter('spend',this)">🛒 지출</button>
+    </div>
+    <div class="summary-row" id="summaryRow"></div>
+    <div class="log-list-gap" id="logList"></div>
   </div>
 
-  <!-- EXPORT TAB -->
-  <div id="tab-export" class="panel" style="display:none; padding-top:8px;">
-    <div class="log-header">
-      <div class="log-title">엑셀 붙여넣기용</div>
-    </div>
-    <div id="totalBar" class="total-bar" style="display:none;">
-      <div class="total-label">총 지출</div>
-      <div class="total-amount" id="totalAmount">0원</div>
-    </div>
+  <!-- EXPORT -->
+  <div id="nav-export" style="display:none;" class="panel">
+    <div class="log-header"><div class="log-title">엑셀 붙여넣기용</div></div>
     <div>
-      <div class="export-header">
-        <span style="font-size:12px; color:var(--ink2);">탭 구분 텍스트 (엑셀에 붙여넣기)</span>
-        <button class="copy-btn" id="copyBtn" onclick="copyExport()">복사</button>
+      <div class="export-hdr">
+        <span style="font-size:12px;color:var(--ink2);">탭 구분 텍스트</span>
+        <button class="copy-btn" id="copyBtn" onclick="doCopy()">복사</button>
       </div>
       <div class="export-area" id="exportArea">아직 입력된 내역이 없습니다.</div>
     </div>
-    <button class="submit-btn" style="background:#E53935; margin-top:8px;" onclick="clearAll()">🗑 전체 초기화</button>
+    <button class="clear-btn" onclick="clearAll()">🗑 전체 초기화</button>
   </div>
 </div>
-
 <div class="toast" id="toast"></div>
 
 <script>
-const CATEGORIES = {
-  '식비':     { icon:'🍽', subs:['식자재','외식','카페류'] },
-  '생활용품': { icon:'🛒', subs:['생활소모품','가전/가구','침구/인테리어'] },
-  '꾸밈비':   { icon:'👗', subs:['의류/잡화','미용/헤어','세탁/수선'] },
-  '건강':     { icon:'💊', subs:['병원/약국','건강보조','예방/검진'] },
-  '자기계발': { icon:'📚', subs:['스터디/수강','운동','도서','구독/레터'] },
-  '자동차':   { icon:'🚗', subs:['주유','주차/통행료','대중교통','택시','소모품/수리','보험/세금','렌트카'] },
-  '기부':     { icon:'💝', subs:['서울대천원식사','세이브더칠드런'] },
-  '취미/여가':{ icon:'🎮', subs:['코인노래방','요가','도자기','헬스장'] },
-  '여행':     { icon:'✈️', subs:['국내여행','해외여행'] },
-  '문화생활': { icon:'🎭', subs:['공연/전시','OTT','기타 입장료'] },
-  '경조사':   { icon:'🎁', subs:['결혼','장례','생일/기념일','기타'] },
-  '주거':     { icon:'🏠', subs:['관리비','도시가스','대출이자','수리/청소','취득세'] },
-  '통신비':   { icon:'📱', subs:['핸드폰','인터넷','기타'] },
-  '보험':     { icon:'🔒', subs:['생명보험','실손보험','기타'] },
-  '용돈':     { icon:'💸', subs:['건우용돈','보경용돈'] },
-  '기타':     { icon:'📌', subs:['기타지출'] },
+const TYPES = {
+  income: { label:'수입',    icon:'💰' },
+  saving: { label:'저축',    icon:'🏦' },
+  fixed:  { label:'고정지출', icon:'📌' },
+  spend:  { label:'지출',    icon:'🛒' },
 };
 
-const PAYMENTS = ['라이킷카드_건우','네이버카드','SC카드','현금/이체','케이뱅크카드','사원증카드','토스하나카드','토스삼성카드','네이버머니카드','더모아카드','상품권','법인카드'];
+const CATS = {
+  income: {
+    '월급':   ['건우월급','보경월급'],
+    '상여':   ['건우상여','보경상여'],
+    '수당':   ['보경수당'],
+    '기타':   ['부수입','투자소득','기타소득'],
+  },
+  saving: {
+    '예적금':   ['주택청약저축','자유적금','청년도약'],
+    '투자':     ['국내주식','해외주식','펀드'],
+    '연금':     ['개인연금','퇴직연금','국민연금'],
+    '목적통장': ['여행','효도','예비비통장','비상금통장'],
+  },
+  fixed: {
+    '주거':    ['관리비','도시가스','대출이자','수리/청소','취득세'],
+    '식비':    ['식자재','외식','카페류'],
+    '생활용품':['생활소모품','가전/가구','침구/인테리어'],
+    '꾸밈비':  ['의류/잡화','미용/헤어','세탁/수선'],
+    '건강':    ['병원/약국','건강보조','예방/검진'],
+    '자기계발':['스터디/수강','운동','도서','구독/레터'],
+    '자동차':  ['주유','주차/통행료','대중교통','택시','소모품/수리','보험/세금','렌트카'],
+    '보험':    ['남편종합','남편실비','아내종합','아내실비','자녀종합'],
+    '통신비':  ['휴대폰','인터넷/TV','수리/Acc','구독'],
+    '용돈':    ['남편용돈','아내용돈'],
+  },
+  spend: {
+    '식비':    ['식자재','외식','카페류'],
+    '생활용품':['생활소모품','가전/가구','침구/인테리어'],
+    '꾸밈비':  ['의류/잡화','미용/헤어','세탁/수선'],
+    '건강':    ['병원/약국','건강보조','예방/검진'],
+    '자기계발':['스터디/수강','운동','도서','구독/레터'],
+    '자동차':  ['주유','주차/통행료','대중교통','택시','소모품/수리','보험/세금','렌트카'],
+    '기부':    ['서울대천원식사','세이브더칠드런'],
+    '취미/여가':['코인노래방','요가','도자기','헬스장'],
+    '여행':    ['국내여행','해외여행'],
+    '문화생활':['공연/전시','OTT','기타 입장료'],
+    '경조사':  ['가족/친척','지인/동료','결혼식','GS25 곗돈'],
+    '기타':    ['세금','회비','서비스'],
+  },
+};
 
-let entries = JSON.parse(localStorage.getItem('ledger_entries') || '[]');
-let selectedCat = '';
-let selectedSub = '';
-let selectedPay = '';
+const PAYMENTS = ['토스하나카드','네이버카드','SC카드','현금/이체','상품권','라이킷카드_건우','네이버머니카드','토스삼성카드','법인카드','케이뱅크카드','사원증카드','더모아카드','라이킷카드_보경'];
 
-// Init
+let entries = JSON.parse(localStorage.getItem('gb2_entries') || '[]');
+let curType = 'income', selCat = '', selSub = '', selPay = '', logFilter = 'all';
+
+// 초기화
 const today = new Date();
 document.getElementById('inputDate').value = today.toISOString().split('T')[0];
 document.getElementById('headerDate').textContent = `${today.getMonth()+1}월 ${today.getDate()}일`;
+document.getElementById('payGroup').style.display = 'none';
 
-// Build category chips
-const catRow = document.getElementById('catRow');
-Object.entries(CATEGORIES).forEach(([cat, info]) => {
-  const chip = document.createElement('button');
-  chip.className = 'cat-chip';
-  chip.textContent = info.icon + ' ' + cat;
-  chip.onclick = () => selectCat(cat);
-  catRow.appendChild(chip);
-});
+buildPayRow();
+buildCatRow();
 
-// Build payment chips
-const payChips = document.getElementById('payChips');
-PAYMENTS.forEach(p => {
-  const chip = document.createElement('button');
-  chip.className = 'pay-chip';
-  chip.textContent = p;
-  chip.onclick = () => selectPay(p, chip);
-  payChips.appendChild(chip);
-});
-
-function selectCat(cat) {
-  selectedCat = cat;
-  selectedSub = '';
-  document.querySelectorAll('.cat-chip').forEach(c => {
-    c.classList.toggle('selected', c.textContent.includes(cat));
-  });
-  const subEl = document.getElementById('subCats');
-  subEl.innerHTML = '';
-  CATEGORIES[cat].subs.forEach(s => {
-    const chip = document.createElement('button');
-    chip.className = 'sub-chip';
-    chip.textContent = s;
-    chip.onclick = () => {
-      selectedSub = s;
-      document.querySelectorAll('.sub-chip').forEach(c => c.classList.remove('selected'));
-      chip.classList.add('selected');
-    };
-    subEl.appendChild(chip);
-  });
-}
-
-function selectPay(pay, el) {
-  selectedPay = pay;
-  document.querySelectorAll('.pay-chip').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-}
-
-function getRawAmount() {
-  return parseInt(document.getElementById('inputAmount').value.replace(/,/g, '') || 0);
-}
-function setFormattedAmount(v) {
-  document.getElementById('inputAmount').value = v > 0 ? v.toLocaleString() : '';
-}
-
+// 금액
+function getRaw() { return parseInt(document.getElementById('inputAmount').value.replace(/,/g,'') || 0); }
+function setAmt(v) { document.getElementById('inputAmount').value = v > 0 ? v.toLocaleString() : ''; }
 document.getElementById('inputAmount').addEventListener('input', function() {
-  const raw = this.value.replace(/,/g, '').replace(/[^0-9]/g, '');
-  const num = parseInt(raw || 0);
-  const pos = this.selectionStart;
-  const prevLen = this.value.length;
-  this.value = num > 0 ? num.toLocaleString() : '';
-  // 커서 위치 보정
-  const diff = this.value.length - prevLen;
-  this.setSelectionRange(pos + diff, pos + diff);
+  const raw = this.value.replace(/,/g,'').replace(/[^0-9]/g,'');
+  const n = parseInt(raw || 0);
+  const pos = this.selectionStart, prev = this.value.length;
+  this.value = n > 0 ? n.toLocaleString() : '';
+  const diff = this.value.length - prev;
+  this.setSelectionRange(pos+diff, pos+diff);
 });
+function addAmt(v) { setAmt(getRaw()+v); }
 
-function addAmount(v) {
-  setFormattedAmount(getRawAmount() + v);
+// 구분 선택
+function selectType(type, el) {
+  curType = type; selCat = ''; selSub = ''; selPay = '';
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('payGroup').style.display = (type==='income'||type==='saving') ? 'none' : '';
+  document.getElementById('submitBtn').className = `submit-btn btn-${type}`;
+  buildCatRow();
 }
 
+// 대분류
+function buildCatRow() {
+  const row = document.getElementById('catRow');
+  row.innerHTML = '';
+  selCat = ''; selSub = '';
+  document.getElementById('subBox').innerHTML = '<span class="sub-placeholder">대분류를 먼저 선택하세요</span>';
+  Object.keys(CATS[curType]).forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'chip';
+    btn.textContent = cat;
+    btn.onclick = () => selectCat(cat, btn);
+    row.appendChild(btn);
+  });
+}
+
+function selectCat(cat, el) {
+  selCat = cat; selSub = '';
+  document.querySelectorAll('#catRow .chip').forEach(c => c.className = 'chip');
+  el.classList.add(`sel-${curType}`);
+  const box = document.getElementById('subBox');
+  box.innerHTML = '';
+  CATS[curType][cat].forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'sub-chip';
+    btn.textContent = s;
+    btn.onclick = () => {
+      selSub = s;
+      document.querySelectorAll('.sub-chip').forEach(c => {
+        c.style.borderColor = 'transparent'; c.style.color = ''; c.style.fontWeight = '';
+      });
+      const colors = { income:'#2A6E4B', saving:'#1E5AA0', fixed:'#7B3FA0', spend:'#C8502A' };
+      btn.style.borderColor = colors[curType];
+      btn.style.color = colors[curType];
+      btn.style.fontWeight = '500';
+    };
+    box.appendChild(btn);
+  });
+}
+
+// 결제수단
+function buildPayRow() {
+  const row = document.getElementById('payRow');
+  PAYMENTS.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'pay-chip';
+    btn.textContent = p;
+    btn.onclick = () => {
+      selPay = p;
+      document.querySelectorAll('.pay-chip').forEach(c => c.classList.remove('selected'));
+      btn.classList.add('selected');
+    };
+    row.appendChild(btn);
+  });
+}
+
+// 제출
 function submitEntry() {
   const date = document.getElementById('inputDate').value;
-  const amount = getRawAmount();
+  const amount = getRaw();
   const memo = document.getElementById('inputMemo').value.trim();
+  const needPay = curType==='fixed' || curType==='spend';
+  if (!date)              { showToast('날짜를 입력해주세요'); return; }
+  if (!amount)            { showToast('금액을 입력해주세요'); return; }
+  if (!selCat)            { showToast('대분류를 선택해주세요'); return; }
+  if (!selSub)            { showToast('소분류를 선택해주세요'); return; }
+  if (needPay && !selPay) { showToast('결제수단을 선택해주세요'); return; }
 
-  if (!date) { showToast('날짜를 입력해주세요'); return; }
-  if (!amount || amount <= 0) { showToast('금액을 입력해주세요'); return; }
-  if (!selectedCat) { showToast('항목을 선택해주세요'); return; }
-  if (!selectedSub) { showToast('소분류를 선택해주세요'); return; }
-  if (!selectedPay) { showToast('결제수단을 선택해주세요'); return; }
-
-  const entry = { id: Date.now(), date, amount, cat: selectedCat, sub: selectedSub, pay: selectedPay, memo };
-  entries.unshift(entry);
+  entries.unshift({ id: Date.now(), type: curType, date, amount, cat: selCat, sub: selSub, pay: selPay, memo });
   save();
-  showToast('✅ 추가됐어요!');
-
-  setFormattedAmount(0);
+  showToast(`${TYPES[curType].icon} 추가됐어요!`);
+  setAmt(0);
   document.getElementById('inputMemo').value = '';
-  document.getElementById('inputDate').value = today.toISOString().split('T')[0];
 }
 
 function save() {
-  localStorage.setItem('ledger_entries', JSON.stringify(entries));
+  localStorage.setItem('gb2_entries', JSON.stringify(entries));
+  if (document.getElementById('nav-log').style.display !== 'none') renderLog();
+  if (document.getElementById('nav-export').style.display !== 'none') renderExport();
+}
+
+// 내역
+function setFilter(f, el) {
+  logFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
   renderLog();
-  renderExport();
 }
 
 function renderLog() {
+  const filtered = logFilter==='all' ? entries : entries.filter(e => e.type===logFilter);
+  document.getElementById('logCount').textContent = filtered.length + '건';
+
+  const sr = document.getElementById('summaryRow');
+  if (logFilter==='all') {
+    const t = { income:0, saving:0, fixed:0, spend:0 };
+    entries.forEach(e => t[e.type] += e.amount);
+    sr.style.gridTemplateColumns = '1fr 1fr';
+    sr.innerHTML = `
+      <div class="summary-card"><div class="summary-label" style="color:var(--c-income)">수입</div><div class="summary-val" style="color:var(--c-income)">${t.income.toLocaleString()}원</div></div>
+      <div class="summary-card"><div class="summary-label" style="color:var(--c-saving)">저축</div><div class="summary-val" style="color:var(--c-saving)">${t.saving.toLocaleString()}원</div></div>
+      <div class="summary-card"><div class="summary-label" style="color:var(--c-fixed)">고정지출</div><div class="summary-val" style="color:var(--c-fixed)">${t.fixed.toLocaleString()}원</div></div>
+      <div class="summary-card"><div class="summary-label" style="color:var(--c-spend)">변동지출</div><div class="summary-val" style="color:var(--c-spend)">${t.spend.toLocaleString()}원</div></div>`;
+  } else {
+    const tot = filtered.reduce((s,e) => s+e.amount, 0);
+    sr.style.gridTemplateColumns = '1fr';
+    sr.innerHTML = `<div class="summary-card" style="grid-column:1/-1"><div class="summary-label">${TYPES[logFilter].label} 합계</div><div class="summary-val">${tot.toLocaleString()}원</div></div>`;
+  }
+
   const list = document.getElementById('logList');
-  document.getElementById('logCount').textContent = entries.length + '건';
-  if (entries.length === 0) {
-    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div>아직 입력된 내역이 없어요.<br>입력 탭에서 지출을 추가해보세요.</div>';
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div>내역이 없어요.</div>';
     return;
   }
-  list.innerHTML = entries.map(e => `
+  list.innerHTML = filtered.map(e => `
     <div class="log-item">
-      <div class="log-cat-badge">${CATEGORIES[e.cat]?.icon || '📌'}</div>
+      <div class="log-badge badge-${e.type}">${TYPES[e.type].icon}</div>
       <div class="log-info">
         <div class="log-name">${e.cat} · ${e.sub}</div>
-        <div class="log-meta">${formatDate(e.date)} &nbsp;·&nbsp; ${e.pay}${e.memo ? ' · ' + e.memo : ''}</div>
+        <div class="log-meta">${fmtDate(e.date)}${e.pay?' · '+e.pay:''}${e.memo?' · '+e.memo:''}</div>
       </div>
-      <div class="log-amount">${e.amount.toLocaleString()}</div>
-      <button class="log-delete" onclick="deleteEntry(${e.id})">×</button>
-    </div>
-  `).join('');
+      <div class="log-amount ${e.type}">${e.type==='income'?'+':''}${e.amount.toLocaleString()}</div>
+      <button class="log-del" onclick="delEntry(${e.id})">×</button>
+    </div>`).join('');
 }
 
+function delEntry(id) {
+  entries = entries.filter(e => e.id!==id);
+  save(); renderLog();
+}
+
+// 내보내기
 function renderExport() {
   const area = document.getElementById('exportArea');
-  const totalBar = document.getElementById('totalBar');
-  if (entries.length === 0) {
-    area.textContent = '아직 입력된 내역이 없습니다.';
-    totalBar.style.display = 'none';
-    return;
-  }
+  if (!entries.length) { area.textContent = '아직 입력된 내역이 없습니다.'; return; }
   const sorted = [...entries].sort((a,b) => a.date.localeCompare(b.date));
-  const total = sorted.reduce((s, e) => s + e.amount, 0);
-  totalBar.style.display = 'flex';
-  document.getElementById('totalAmount').textContent = total.toLocaleString() + '원';
-  // Tab-separated: 구분 | 날짜 | 대분류 | 소분류 | 사용내역 | 금액 | 결제수단
-  const header = '구분\t날짜\t대분류\t소분류\t사용내역\t금액\t결제수단';
-  const rows = sorted.map(e =>
-    `지출\t${e.date}\t${e.cat}\t${e.sub}\t${e.memo || e.sub}\t${e.amount}\t${e.pay}`
-  );
-  area.textContent = [header, ...rows].join('\n');
+  const sec = [];
+  const inc = sorted.filter(e=>e.type==='income');
+  const sav = sorted.filter(e=>e.type==='saving');
+  const fix = sorted.filter(e=>e.type==='fixed');
+  const spd = sorted.filter(e=>e.type==='spend');
+  if (inc.length) sec.push('──── 수입 ────\n구분\t날짜\t대분류\t소분류\t수입내역\t금액\n'+inc.map(e=>`수\t${e.date}\t${e.cat}\t${e.sub}\t${e.memo||e.sub}\t${e.amount}`).join('\n'));
+  if (sav.length) sec.push('──── 저축 ────\n구분\t날짜\t대분류\t소분류\t저축내역\t금액\n'+sav.map(e=>`저\t${e.date}\t${e.cat}\t${e.sub}\t${e.memo||e.sub}\t${e.amount}`).join('\n'));
+  if (fix.length) sec.push('──── 고정지출 ────\n구분\t날짜\t대분류\t소분류\t사용내역\t금액\t결제수단\n'+fix.map(e=>`고\t${e.date}\t${e.cat}\t${e.sub}\t${e.memo||e.sub}\t${e.amount}\t${e.pay}`).join('\n'));
+  if (spd.length) sec.push('──── 변동지출 ────\n구분\t날짜\t대분류\t소분류\t사용내역\t금액\t결제수단\n'+spd.map(e=>`지출\t${e.date}\t${e.cat}\t${e.sub}\t${e.memo||e.sub}\t${e.amount}\t${e.pay}`).join('\n'));
+  area.textContent = sec.join('\n\n');
 }
 
-function deleteEntry(id) {
-  entries = entries.filter(e => e.id !== id);
-  save();
+function doCopy() {
+  const txt = document.getElementById('exportArea').textContent;
+  if (txt==='아직 입력된 내역이 없습니다.') return;
+  navigator.clipboard.writeText(txt).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent='✓ 복사됨'; btn.classList.add('copied');
+    setTimeout(()=>{ btn.textContent='복사'; btn.classList.remove('copied'); }, 2000);
+  });
 }
 
 function clearAll() {
   if (!confirm('정말 전체 초기화할까요?')) return;
-  entries = [];
-  save();
-  showToast('초기화됐어요');
+  entries=[]; save(); showToast('초기화됐어요');
 }
 
-function copyExport() {
-  const text = document.getElementById('exportArea').textContent;
-  if (text === '아직 입력된 내역이 없습니다.') return;
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = document.getElementById('copyBtn');
-    btn.textContent = '✓ 복사됨';
-    btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = '복사'; btn.classList.remove('copied'); }, 2000);
-  });
-}
-
-function formatDate(d) {
-  const [y,m,day] = d.split('-');
-  return `${parseInt(m)}/${parseInt(day)}`;
-}
-
-function switchTab(tab) {
+function switchNav(tab) {
   ['input','log','export'].forEach(t => {
-    document.getElementById('tab-'+t).style.display = t===tab ? 'flex' : 'none';
+    document.getElementById('nav-'+t).style.display = t===tab ? '' : 'none';
   });
-  document.querySelectorAll('.tab').forEach((el, i) => {
-    el.classList.toggle('active', ['input','log','export'][i] === tab);
+  document.querySelectorAll('.nav-tab').forEach((el,i) => {
+    el.classList.toggle('active', ['input','log','export'][i]===tab);
   });
-  if (tab === 'log') renderLog();
-  if (tab === 'export') renderExport();
+  if (tab==='log') renderLog();
+  if (tab==='export') renderExport();
 }
 
-// Init render
-renderLog();
-renderExport();
+function fmtDate(d) { const [,m,day]=d.split('-'); return `${parseInt(m)}/${parseInt(day)}`; }
+function showToast(msg) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 2000);
+}
 </script>
 </body>
 </html>

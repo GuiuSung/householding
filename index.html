@@ -219,10 +219,10 @@
   <!-- INPUT -->
   <div id="nav-input">
     <div class="type-row">
-      <button class="type-btn t-income active" onclick="selectType('income',this)"><span>💰</span>수입</button>
-      <button class="type-btn t-saving"        onclick="selectType('saving',this)"><span>🏦</span>저축</button>
-      <button class="type-btn t-fixed"         onclick="selectType('fixed',this)"><span>📌</span>고정</button>
-      <button class="type-btn t-spend"         onclick="selectType('spend',this)"><span>🛒</span>지출</button>
+      <button class="type-btn t-income" onclick="selectType('income',this)"><span>💰</span>수입</button>
+      <button class="type-btn t-saving" onclick="selectType('saving',this)"><span>🏦</span>저축</button>
+      <button class="type-btn t-fixed"  onclick="selectType('fixed',this)"><span>📌</span>고정</button>
+      <button class="type-btn t-spend active"  onclick="selectType('spend',this)"><span>🛒</span>지출</button>
     </div>
     <div class="panel">
       <div class="form-group">
@@ -347,13 +347,14 @@ const CATS = {
 const PAYMENTS = ['토스하나카드','네이버카드','SC카드','현금/이체','상품권','라이킷카드_건우','네이버머니카드','토스삼성카드','법인카드','케이뱅크카드','사원증카드','더모아카드','라이킷카드_보경'];
 
 let entries = JSON.parse(localStorage.getItem('gb2_entries') || '[]');
-let curType = 'income', selCat = '', selSub = '', selPay = '', logFilter = 'all';
+let curType = 'spend', selCat = '', selSub = '', selPay = '', logFilter = 'all';
 
 // 초기화
 const today = new Date();
 document.getElementById('inputDate').value = today.toISOString().split('T')[0];
 document.getElementById('headerDate').textContent = `${today.getMonth()+1}월 ${today.getDate()}일`;
-document.getElementById('payGroup').style.display = 'none';
+document.getElementById('payGroup').style.display = '';
+document.getElementById('submitBtn').className = 'submit-btn btn-spend';
 
 buildPayRow();
 buildCatRow();
